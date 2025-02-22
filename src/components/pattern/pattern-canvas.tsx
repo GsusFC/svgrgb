@@ -1,6 +1,6 @@
 import { usePatternStore } from '@/store/pattern-store'
-import { useCallback, useEffect, useRef } from 'react'
-import { cn } from '@/lib/utils'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
+import { cn, generatePatternPath, type PatternType } from '@/lib/utils'
 
 interface PatternCanvasProps {
   className?: string
@@ -11,10 +11,8 @@ export const PatternCanvas = ({ className }: PatternCanvasProps) => {
   const {
     type,
     backgroundColor,
-    shapeColor,
     spacing,
     repeatX,
-    repeatY,
     rotation,
     scale,
     width,
@@ -22,23 +20,29 @@ export const PatternCanvas = ({ className }: PatternCanvasProps) => {
     animate
   } = usePatternStore()
 
-  const generatePattern = useCallback(() => {
-    if (!svgRef.current) return
-
-    const svg = svgRef.current
-    svg.innerHTML = ''
-
-    // Pattern generation logic based on type
+  const patternParams = useMemo(() => {
     switch (type) {
       case 'dots':
-        // Implementation for dots pattern
-        break
+      case 'grid':
+        return { spacing, size: scale }
       case 'lines':
-        // Implementation for lines pattern
-        break
-      // ... other pattern types
+        return { spacing, size: scale, angle: rotation }
+      case 'waves':
+        return { spacing, size: scale, amplitude: scale, frequency: repeatX }
+      case 'bezier':
+        return { spacing, size: scale, control: rotation }
+      case 'spiral':
+        return { spacing, size: scale, turns: rotation }
+      default:
+        return { spacing, size: scale }
     }
-  }, [type, spacing, repeatX, repeatY, rotation, scale, shapeColor])
+  }, [type, spacing, scale, rotation, repeatX])
+
+  const generatePattern = useCallback(() => {
+    if (!svgRef.current) return
+    const svg = svgRef.current
+    svg.innerHTML = generatePatternPath(type as PatternType, patternParams)
+  }, [type, patternParams])
 
   useEffect(() => {
     generatePattern()
