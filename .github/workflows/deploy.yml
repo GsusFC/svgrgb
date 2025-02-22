@@ -16,15 +16,22 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '18'
+          cache: 'npm'
           
       - name: Install Dependencies
-        run: npm install
+        run: npm ci
         
       - name: Build
         run: npm run build
+        
+      - name: Configure Git
+        run: |
+          git config --global user.name github-actions
+          git config --global user.email github-actions@github.com
         
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./out
+          cname: svgrgb.gsusfc.dev # opcional, si tienes un dominio personalizado
